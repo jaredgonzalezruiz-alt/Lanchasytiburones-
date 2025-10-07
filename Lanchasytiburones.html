@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lanchas y Tiburones - Cartas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            background-color: #2fac67; /* Fallback color */
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+
+        /* --- Fondo Oceánico --- */
+        .ocean-background { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; overflow: hidden; }
+        .sea { position: absolute; left: 0; width: 100%; height: 50%; position: relative; overflow: hidden; }
+        .green-sea { top: 0; background: #2fac67; }
+        .red-sea { bottom: 0; background: #e30613; }
+        .blending-zone { position: absolute; top: 50%; left: 0; width: 100%; height: 250px; transform: translateY(-50%); background: linear-gradient(to bottom, #2fac67, #e30613); filter: blur(60px) contrast(1.5); z-index: 1; }
+        .ocean-background::before, .ocean-background::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; mix-blend-mode: overlay; }
+        .ocean-background::before { background: linear-gradient(110deg, transparent 40%, rgba(255, 255, 255, 0.25) 50%, transparent 60%); background-size: 200% 100%; animation: tide-sweep 12s ease-in-out infinite; }
+        .ocean-background::after { background: linear-gradient(20deg, transparent 30%, rgba(255, 255, 255, 0.2) 50%, transparent 70%); background-size: 300% 100%; animation: tide-sweep-2 15s ease-in-out infinite; animation-delay: -5s; }
+        @keyframes tide-sweep { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        @keyframes tide-sweep-2 { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        .sea::before, .sea::after { content: ''; position: absolute; top: -125%; left: -125%; width: 350%; height: 350%; background: radial-gradient(circle at center, rgba(255, 255, 255, 0.15) 0%, transparent 35%); mix-blend-mode: screen; animation: caustics 30s cubic-bezier(0.45, 0, 0.55, 1) infinite; opacity: 0.8; }
+        .sea::after { animation-direction: reverse; animation-duration: 25s; }
+        @keyframes caustics { 0% { transform: rotate(0deg) scale(1) translateX(0) translateY(0); } 50% { transform: rotate(180deg) scale(1.1) translateX(5%) translateY(10%); } 100% { transform: rotate(360deg) scale(1) translateX(0) translateY(0); } }
+        
+        /* --- Registro --- */
+        #registration-modal .form-container { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
+        #registration-modal input { background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); }
+        #registration-modal input:focus { background: rgba(255, 255, 255, 0.3); border-color: rgba(255, 255, 255, 0.7); }
+        
+        /* --- Elementos del Juego --- */
+        .sea-life-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; overflow: hidden; }
+        .sea-life { position: absolute; background-size: contain; background-repeat: no-repeat; will-change: transform; opacity: 0.15; }
+        .shark { width: 100px; height: 50px; background-image: url("https://images4.imagebam.com/4d/b5/61/ME163M5D_o.png"); }
+        .boat { width: 80px; height: 45px; background-image: url("https://images4.imagebam.com/dc/7e/21/ME163M4Z_o.png"); }
+        @keyframes move-boat-ltr { 0% { transform: translateX(-150px) translateY(0px) scale(var(--scale, 1)); } 100% { transform: translateX(calc(100vw + 150px)) translateY(0px) scale(var(--scale, 1)); } }
+        @keyframes move-boat-rtl { 0% { transform: translateX(calc(100vw + 150px)) translateY(0px) scaleX(-1) scale(var(--scale, 1)); } 100% { transform: translateX(-150px) translateY(0px) scaleX(-1) scale(var(--scale, 1)); } }
+        @keyframes move-shark-ltr { 0% { transform: translateX(-150px) translateY(0) rotate(-5deg) scale(var(--scale, 1)); } 100% { transform: translateX(calc(100vw + 150px)) translateY(-10px) rotate(0deg) scale(var(--scale, 1)); } }
+        @keyframes move-shark-rtl { 0% { transform: translateX(calc(100vw + 150px)) translateY(0) rotate(5deg) scaleX(-1) scale(var(--scale, 1)); } 100% { transform: translateX(-150px) translateY(-10px) rotate(0deg) scaleX(-1) scale(var(--scale, 1)); } }
+        .particles { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 3; }
+        .particle { position: absolute; bottom: -20px; background: rgba(255, 255, 255, 0.15); border-radius: 50%; animation: float-up linear infinite; }
+        @keyframes float-up { to { transform: translateY(-105vh); } }
+        .card-deck { position: relative; cursor: pointer; transition: transform 0.3s ease, filter 0.3s ease; z-index: 10; animation: float-effect 4s ease-in-out infinite; }
+        @keyframes float-effect { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        .card-deck:hover { transform: scale(1.05) translateY(-10px); filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3)); animation-play-state: paused; }
+        .card-deck img { position: absolute; width: 100%; height: 100%; object-fit: contain; border-radius: 12px; transition: transform 0.3s ease; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); }
+        .card-deck img:nth-child(1) { transform: rotate(-3deg); } .card-deck img:nth-child(2) { transform: rotate(2deg); } .card-deck img:nth-child(3) { transform: rotate(-1deg); }
+        #modal-overlay { background-color: rgba(0, 0, 0, 0.2); backdrop-filter: blur(5px); perspective: 1500px; }
+        #card-modal-content { animation: flip-spiral-in 0.8s cubic-bezier(0.25, 1, 0.5, 1); transform-style: preserve-3d; }
+        @keyframes flip-spiral-in { from { opacity: 0; transform: scale(0.3) rotateY(180deg) rotateZ(-90deg); } to { opacity: 1; transform: scale(1) rotateY(0deg) rotateZ(0deg); } }
+        #droplet-container { position: absolute; top: 50%; left: 50%; width: 1px; height: 1px; }
+        .droplet { position: absolute; width: 10px; height: 15px; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; transform-origin: center; animation: droplet-burst 0.6s ease-out forwards; }
+        @keyframes droplet-burst { from { transform: translate(-50%, -50%) scale(1.5); opacity: 1; } to { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; } }
+
+        /* --- Efecto Tsunami --- */
+        #tsunami-effect { position: fixed; inset: 0; z-index: 100; pointer-events: none; opacity: 0; visibility: hidden; overflow: hidden; }
+        #tsunami-effect.active { opacity: 1; visibility: visible; transition: opacity 0.1s ease-out; }
+        .tsunami-wave { position: absolute; bottom: 0; left: -5%; width: 110%; height: 120%; background: linear-gradient(to top, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.85) 80%); transform: translateY(110%); filter: contrast(1.2); }
+        .tsunami-wave::before { content: ''; position: absolute; top: -50px; left: 0; width: 200%; height: 150px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 100' preserveAspectRatio='none'%3E%3Cpath d='M-10,90 C150,-20 350,150 500,60 C650,-30 850,160 1010,70 L1010,110 L-10,110 Z' fill='rgba(255,255,255,0.7)'%3E%3C/path%3E%3C/svg%3E"); background-size: 50% 100%; animation: foam-move 2s linear infinite; filter: blur(5px); opacity: 0.8; }
+        #tsunami-effect.active .tsunami-wave { animation: tsunami-realistic-sweep 2.2s cubic-bezier(0.6, 0.04, 0.98, 0.335) forwards; }
+        .tsunami-bubble { position: absolute; bottom: -50px; background: rgba(255, 255, 255, 0.6); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 50%; animation: tsunami-bubble-rise forwards; box-shadow: 0 0 10px rgba(255, 255, 255, 0.5); will-change: transform, opacity; }
+        @keyframes tsunami-realistic-sweep { 0% { transform: translateY(110%) scaleY(0.9); } 45% { transform: translateY(-15%) scaleY(1.1); } 70% { transform: translateY(-15%) scaleY(1.1); } 100% { transform: translateY(-130%) scaleY(1); } }
+        @keyframes foam-move { from { transform: translateX(0%); } to { transform: translateX(-50%); } }
+        @keyframes tsunami-bubble-rise { 0% { transform: translateY(0) scale(0.8); opacity: 0.9; } 100% { transform: translateY(-120vh) scale(1.2); opacity: 0; } }
+
+        /* --- Menú Principal --- */
+        #main-menu { background: linear-gradient(45deg, #baf05d, #a2d451, #c8f56a); background-size: 200% 200%; animation: menu-tide 10s ease infinite; transition: opacity 0.5s ease-out, visibility 0.5s; overflow: hidden; }
+        @keyframes menu-tide { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        #main-menu img { animation: gentle-pulse 4s ease-in-out infinite; }
+        @keyframes gentle-pulse { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3)); } 50% { transform: scale(1.03); filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.5)); } }
+        .menu-particle { position: absolute; bottom: -50px; border-radius: 50%; background: rgba(255, 255, 255, 0.25); animation: menu-bubble-float linear infinite; box-shadow: 0 0 15px rgba(255, 255, 255, 0.5); }
+        @keyframes menu-bubble-float { to { transform: translateY(-110vh); opacity: 0; } }
+    </style>
+</head>
+<body class="m-0 p-0">
+    <!-- Fondo Animado (siempre visible) -->
+    <div class="ocean-background">
+        <div class="sea green-sea"></div>
+        <div class="blending-zone"></div>
+        <div class="sea red-sea"></div>
+        <div class="sea-life-container" id="sea-life-container"></div>
+        <div class="particles" id="particles-container"></div>
+    </div>
+    
+    <!-- Efecto Tsunami -->
+    <div id="tsunami-effect">
+        <div class="tsunami-wave"></div>
+    </div>
+
+    <!-- MODAL DE REGISTRO -->
+    <div id="registration-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="form-container w-full max-w-md max-h-[90vh] overflow-y-auto p-6 sm:p-8 rounded-2xl shadow-2xl text-white">
+            <h2 class="text-2xl sm:text-3xl font-bold text-center mb-4 text-shadow">Registro para Jugar</h2>
+            <p class="text-center mb-6 text-shadow-sm">Completa tus datos una sola vez para acceder al juego.</p>
+            <form id="registration-form" novalidate>
+                <div class="space-y-4">
+                    <input type="text" id="nombre" name="Nombre completo" placeholder="Nombre completo *" required class="w-full p-3 rounded-lg outline-none transition-all duration-300">
+                    <input type="email" id="email" name="Correo electronico" placeholder="Correo electrónico *" required class="w-full p-3 rounded-lg outline-none transition-all duration-300">
+                    <input type="text" id="ciudad" name="Ciudad" placeholder="Ciudad *" required class="w-full p-3 rounded-lg outline-none transition-all duration-300">
+                    <input type="tel" id="telefono" name="Telefono" placeholder="Teléfono (Opcional)" class="w-full p-3 rounded-lg outline-none transition-all duration-300">
+                    <input type="text" id="organizacion" name="Organismo" placeholder="Escuela / Empresa (Opcional)" class="w-full p-3 rounded-lg outline-none transition-all duration-300">
+                </div>
+                <button type="submit" id="register-button" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg mt-6 transition-all duration-300 transform hover:scale-105">
+                    Registrar y Jugar
+                </button>
+                <p id="form-status" class="text-center mt-4 text-sm h-5"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- MENÚ DE INICIO -->
+    <div id="main-menu" class="hidden fixed inset-0 z-40 flex flex-col items-center justify-center p-4">
+        <div id="menu-particles-container" class="absolute inset-0 z-0"></div>
+        <div class="menu-content relative flex flex-col items-center justify-center">
+            <img src="https://images4.imagebam.com/e1/2a/5d/ME163P2M_o.png" alt="Título del Juego" class="w-full max-w-[280px] sm:max-w-sm md:max-w-md mb-8">
+            <button id="play-button" class="bg-white/20 backdrop-blur-md text-gray-800 font-bold py-3 px-8 sm:py-4 sm:px-10 rounded-full border-2 border-gray-800/50 text-xl sm:text-2xl transform transition-transform duration-300 hover:scale-110">
+                Jugar
+            </button>
+        </div>
+    </div>
+    
+    <!-- CONTENEDOR DEL JUEGO -->
+    <div id="game-container" class="hidden">
+        <button id="back-to-menu-button" class="fixed top-3 left-3 sm:top-4 sm:left-4 z-[1000] w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/40 hover:bg-white/30 transform hover:scale-110 transition-all">
+             <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" /></svg>
+        </button>
+        <button id="mute-button" class="fixed top-3 right-3 sm:top-4 sm:right-4 z-[1000] w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/40 hover:bg-white/30 transform hover:scale-110 transition-all">
+            <svg id="sound-on-icon" class="w-5 h-5 sm:w-6 sm:h-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" /></svg>
+            <svg id="sound-off-icon" class="w-5 h-5 sm:w-6 sm:h-6 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 9.75 19.5 12m0 0 2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6.375a9 9 0 0 1 12.728 0M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" /></svg>
+        </button>
+        <div class="relative z-10 flex flex-col items-center justify-around w-full h-screen p-6 sm:p-8 lg:p-12">
+            <div id="lanchas-deck" class="w-28 h-40 sm:w-36 sm:h-52 md:w-40 md:h-60 lg:w-48 lg:h-72 card-deck">
+                <img src="https://images4.imagebam.com/56/a1/1f/ME163JZS_o.png" alt="Carta Lancha Dorso"><img src="https://images4.imagebam.com/56/a1/1f/ME163JZS_o.png" alt="Carta Lancha Dorso"><img src="https://images4.imagebam.com/56/a1/1f/ME163JZS_o.png" alt="Carta Lancha Dorso">
+            </div>
+            <button id="reset-button" class="bg-white/20 backdrop-blur-md text-white font-bold py-2 px-6 text-sm sm:text-base sm:py-3 sm:px-8 rounded-full border-2 border-white/50 transform hover:scale-105 transition-transform">Barajear</button>
+            <div id="tiburones-deck" class="w-28 h-40 sm:w-36 sm:h-52 md:w-40 md:h-60 lg:w-48 lg:h-72 card-deck">
+                <img src="https://images4.imagebam.com/ef/6d/9c/ME163KA7_o.png" alt="Carta Tiburón Dorso"><img src="https://images4.imagebam.com/ef/6d/9c/ME163KA7_o.png" alt="Carta Tiburón Dorso"><img src="https://images4.imagebam.com/ef/6d/9c/ME163KA7_o.png" alt="Carta Tiburón Dorso">
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CARTA ROBADA -->
+    <div id="modal-overlay" class="hidden fixed inset-0 w-full h-full z-[1001] items-center justify-center p-4">
+        <div id="card-modal-content" class="relative">
+            <img id="drawn-card-img" src="" alt="Carta seleccionada" class="max-w-[85vw] sm:max-w-xs md:max-w-sm max-h-[80vh] rounded-2xl shadow-2xl">
+            <div id="droplet-container"></div>
+            <!-- Botón de cerrar añadido -->
+            <button id="close-modal-btn" class="absolute -top-2 -right-2 w-8 h-8 sm:w-10 sm:h-10 text-white text-xl sm:text-2xl font-bold rounded-full flex items-center justify-center bg-black/50 hover:bg-red-600/80 transition-all duration-200 transform hover:rotate-90 focus:outline-none">
+                &times;
+            </button>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwna9F8mW5eEl5EBdfI_kC22pjx66eCDxcN9wWDVkJKVadbdp11o__UfHSeZ546WktkgA/exec';
+        const registrationModal = document.getElementById('registration-modal');
+        const registrationForm = document.getElementById('registration-form');
+        const registerButton = document.getElementById('register-button');
+        const formStatus = document.getElementById('form-status');
+        const mainMenu = document.getElementById('main-menu');
+        const gameContainer = document.getElementById('game-container');
+        const playButton = document.getElementById('play-button');
+        
+        function handleRegistration() {
+            registrationForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (!registrationForm.checkValidity()) {
+                    formStatus.textContent = 'Por favor, completa los campos obligatorios.';
+                    formStatus.style.color = '#ffcdd2';
+                    return;
+                }
+                registerButton.disabled = true;
+                registerButton.textContent = 'Registrando...';
+                formStatus.textContent = '';
+                fetch(SCRIPT_URL, { method: 'POST', body: new FormData(registrationForm)})
+                .then(response => response.json())
+                .then(data => {
+                    if (data.result === 'success' || data.result === 'duplicate') {
+                        localStorage.setItem('isRegistered', 'true');
+                        formStatus.textContent = '¡Registro exitoso!';
+                        formStatus.style.color = '#C8E6C9';
+                        setTimeout(() => {
+                            registrationModal.classList.add('hidden');
+                            mainMenu.classList.remove('hidden');
+                        }, 1500);
+                    } else { throw new Error(data.error || 'Ocurrió un error desconocido.'); }
+                })
+                .catch(error => {
+                    formStatus.textContent = `Error al registrar: ${error.message}`;
+                    formStatus.style.color = '#ffcdd2';
+                    registerButton.disabled = false;
+                    registerButton.textContent = 'Registrar y Jugar';
+                });
+            });
+        }
+        
+        function initializeApp() {
+            if (localStorage.getItem('isRegistered') === 'true') {
+                mainMenu.classList.remove('hidden');
+            } else {
+                registrationModal.classList.remove('hidden');
+                handleRegistration();
+            }
+            preloadCardImages();
+            createParticles();
+            createMenuParticles();
+            createSeaLife();
+        }
+
+        const lanchasCardUrls = ["https://images4.imagebam.com/89/c5/23/ME163JS4_o.png","https://images4.imagebam.com/e6/59/1e/ME163JS9_o.png","https://images4.imagebam.com/ac/25/9f/ME163JVJ_o.png","https://images4.imagebam.com/a9/9e/ed/ME163JVY_o.png","https://images4.imagebam.com/ee/de/02/ME163JWB_o.png","https://images4.imagebam.com/08/4f/9a/ME163JXB_o.png","https://images4.imagebam.com/6d/60/4a/ME163JXE_o.png","https://images4.imagebam.com/b7/db/89/ME163JXN_o.png","https://images4.imagebam.com/64/36/44/ME164D7C_o.png","https://images4.imagebam.com/c8/06/89/ME164D6Z_o.png","https://images4.imagebam.com/fa/e0/6c/ME164D81_o.png","https://images4.imagebam.com/0b/e7/9d/ME164D8Y_o.png","https://images4.imagebam.com/3b/00/10/ME164D8K_o.png","https://images4.imagebam.com/c5/08/f8/ME164D98_o.png","https://images4.imagebam.com/7d/bb/52/ME164D9H_o.png","https://images4.imagebam.com/56/81/4c/ME164DAI_o.png","https://images4.imagebam.com/15/20/4c/ME164DB8_o.png","https://images4.imagebam.com/91/52/b1/ME164DBP_o.png","https://images4.imagebam.com/87/97/1c/ME164DCI_o.png","https://images4.imagebam.com/2e/9f/e4/ME164DDG_o.png","https://images4.imagebam.com/d7/e5/d1/ME164DDS_o.png","https://images4.imagebam.com/fe/78/94/ME164DF3_o.png","https://images4.imagebam.com/bf/90/02/ME164DH9_o.png","https://images4.imagebam.com/d7/24/2a/ME164DI5_o.png"];
+        const tiburonesCardUrls = ["https://images4.imagebam.com/f5/38/81/ME163K2H_o.png","https://images4.imagebam.com/99/42/d8/ME163K3C_o.png","https://images4.imagebam.com/c4/60/61/ME163K4A_o.png","https://images4.imagebam.com/ca/68/68/ME163K57_o.png","https://images4.imagebam.com/f0/1b/83/ME163K58_o.png","https://images4.imagebam.com/42/3e/3b/ME163K5T_o.png","https://images4.imagebam.com/b1/37/74/ME163K65_o.png","https://images4.imagebam.com/eb/0c/cb/ME163K7A_o.png","https://images4.imagebam.com/50/b5/f7/ME163K88_o.png","https://images4.imagebam.com/d9/1c/df/ME163K8Y_o.png","https://images4.imagebam.com/ac/60/04/ME163K9X_o.png","https://images4.imagebam.com/ef/13/03/ME163KA1_o.png","https://images4.imagebam.com/53/81/72/ME164F0G_o.png","https://images4.imagebam.com/b6/00/aa/ME164F0X_o.png","https://images4.imagebam.com/dc/07/b7/ME164FU9_o.png","https://images4.imagebam.com/9e/85/8d/ME164FW5_o.png","https://images4.imagebam.com/55/34/86/ME164FY3_o.png","https://images4.imagebam.com/1a/42/60/ME164FZN_o.png","https://images4.imagebam.com/4b/5b/6e/ME164G2P_o.png","https://images4.imagebam.com/41/4d/10/ME164G3O_o.png","https://images4.imagebam.com/ce/54/af/ME164G4A_o.png","https://images4.imagebam.com/23/e3/0c/ME164G6R_o.png","https://images4.imagebam.com/4a/fb/13/ME164GA3_o.png","https://images4.imagebam.com/fd/91/e6/ME164GAP_o.png"];
+        
+        let currentLanchasDeck = [], currentTiburonesDeck = [], audioCtx, masterGain, isMuted = false, isMusicPlaying = false, musicNodes = { noise: null, lfo: null, interval: null };
+        
+        const lanchasDeckEl = document.getElementById('lanchas-deck'), tiburonesDeckEl = document.getElementById('tiburones-deck'), resetButton = document.getElementById('reset-button'), modalOverlay = document.getElementById('modal-overlay'), drawnCardImg = document.getElementById('drawn-card-img'), dropletContainer = document.getElementById('droplet-container'), particlesContainer = document.getElementById('particles-container'), seaLifeContainer = document.getElementById('sea-life-container'), tsunamiEffect = document.getElementById('tsunami-effect'), muteButton = document.getElementById('mute-button'), soundOnIcon = document.getElementById('sound-on-icon'), soundOffIcon = document.getElementById('sound-off-icon'), backToMenuButton = document.getElementById('back-to-menu-button'), menuParticlesContainer = document.getElementById('menu-particles-container'), closeModalBtn = document.getElementById('close-modal-btn');
+
+        function preloadCardImages() {
+            const allCards = [...lanchasCardUrls, ...tiburonesCardUrls];
+            allCards.forEach(url => { (new Image()).src = url; });
+        }
+        function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+        function initializeDecks(){currentLanchasDeck=shuffle([...lanchasCardUrls]);currentTiburonesDeck=shuffle([...tiburonesCardUrls])}
+        function drawCard(deckType){initAudio();let deck=(deckType==='lanchas')?currentLanchasDeck:currentTiburonesDeck;let originalDeck=(deckType==='lanchas')?lanchasCardUrls:tiburonesCardUrls;if(deck.length===0)deck.push(...shuffle([...originalDeck]));const cardUrl=deck.pop();(deckType==='lanchas')?playLanchaSound():playTiburonSound();showCardModal(cardUrl,deckType)}
+        function createDroplets(deckType){dropletContainer.innerHTML='';const color=deckType==='lanchas'?'#35c479':'#ff3c48';for(let i=0;i<40;i++){const d=document.createElement('div');d.className='droplet';const a=Math.random()*Math.PI*2,dist=Math.random()*250+150;const tx=Math.cos(a)*dist,ty=Math.sin(a)*dist;d.style.setProperty('--tx',`${tx}px`);d.style.setProperty('--ty',`${ty}px`);d.style.backgroundColor=color;d.style.animationDelay=`${Math.random()*0.1}s`;dropletContainer.appendChild(d)}}
+        function createParticles(){for(let i=0;i<80;i++){const p=document.createElement('div');p.className='particle';const s=Math.random()*8+2;p.style.width=`${s}px`;p.style.height=`${s}px`;p.style.left=`${Math.random()*100}%`;p.style.animationDuration=`${Math.random()*10+10}s`;p.style.animationDelay=`${Math.random()*15}s`;particlesContainer.appendChild(p)}}
+        function createMenuParticles(){for(let i=0;i<40;i++){const p=document.createElement('div');p.className='menu-particle';const s=Math.random()*30+10;p.style.width=`${s}px`;p.style.height=`${s}px`;p.style.left=`${Math.random()*100}%`;p.style.animationDuration=`${Math.random()*8+8}s`;p.style.animationDelay=`${Math.random()*16}s`;p.style.opacity=Math.random()*0.5+0.2;menuParticlesContainer.appendChild(p)}}
+        function createSeaLife(){const f=[{class:'shark',count:3},{class:'boat',count:4}];f.forEach(fig=>{for(let i=0;i<fig.count;i++){const el=document.createElement('div');el.classList.add('sea-life',fig.class);const s=Math.random()*0.5+0.5;let y=(fig.class==='boat')?Math.random()*40:Math.random()*90;const dur=Math.random()*25+20,del=Math.random()*-45;el.style.setProperty('--scale',s);el.style.top=`${y}%`;el.style.animation=`${(fig.class==='boat'?(Math.random()>0.5?'move-boat-ltr':'move-boat-rtl'):(Math.random()>0.5?'move-shark-ltr':'move-shark-rtl'))} ${dur}s linear ${del}s infinite`;seaLifeContainer.appendChild(el)}})}
+        function showCardModal(url,deckType){drawnCardImg.src=url;modalOverlay.classList.remove('hidden');modalOverlay.classList.add('flex');createDroplets(deckType)}
+        function hideCardModal(){modalOverlay.classList.add('hidden');modalOverlay.classList.remove('flex');drawnCardImg.src="";dropletContainer.innerHTML=''}
+        function initAudio(){if(audioCtx)return;try{audioCtx=new(window.AudioContext||window.webkitAudioContext)();masterGain=audioCtx.createGain();masterGain.gain.value=isMuted?0:1;masterGain.connect(audioCtx.destination);playBackgroundMusic()}catch(e){console.error("Web Audio API not supported")}}
+        function playBackgroundMusic(){if(!audioCtx||isMusicPlaying)return;isMusicPlaying=true;const bS=4*audioCtx.sampleRate,nB=audioCtx.createBuffer(1,bS,audioCtx.sampleRate),out=nB.getChannelData(0);let lO=0;for(let i=0;i<bS;i++){const w=Math.random()*2-1;out[i]=(lO+(0.02*w))/1.02;lO=out[i];out[i]*=3.5}const n=audioCtx.createBufferSource();n.buffer=nB;n.loop=true;const rF=audioCtx.createBiquadFilter();rF.type='lowpass';rF.frequency.value=150;const l=audioCtx.createOscillator();l.frequency.value=0.1;const lG=audioCtx.createGain();lG.gain.value=50;l.connect(lG).connect(rF.frequency);const rG=audioCtx.createGain();rG.gain.value=0.3;n.connect(rF).connect(rG).connect(masterGain);n.start();l.start();const cN=[392,440,523.25,587.33,659.25];const int=setInterval(()=>{if(!audioCtx||!isMusicPlaying){clearInterval(int);return}const cO=audioCtx.createOscillator(),cG=audioCtx.createGain();cO.type='sine';cO.frequency.value=cN[Math.floor(Math.random()*cN.length)];cG.gain.setValueAtTime(0,audioCtx.currentTime);cG.gain.linearRampToValueAtTime(0.2,audioCtx.currentTime+0.1);cG.gain.exponentialRampToValueAtTime(1e-4,audioCtx.currentTime+3);cO.connect(cG).connect(masterGain);cO.start();cO.stop(audioCtx.currentTime+3)},4000+Math.random()*3000);musicNodes={noise:n,lfo:l,interval:int}}
+        function stopBackgroundMusic(){if(!isMusicPlaying||!musicNodes)return;if(musicNodes.noise)musicNodes.noise.stop();if(musicNodes.lfo)musicNodes.lfo.stop();if(musicNodes.interval)clearInterval(musicNodes.interval);musicNodes={noise:null,lfo:null,interval:null};isMusicPlaying=false}
+        function playLanchaSound(){if(!audioCtx)return;const o=audioCtx.createOscillator(),g=audioCtx.createGain();g.gain.value=0.3;o.type='sine';o.frequency.setValueAtTime(523.25,audioCtx.currentTime);o.frequency.exponentialRampToValueAtTime(1046.5,audioCtx.currentTime+0.2);g.gain.exponentialRampToValueAtTime(1e-5,audioCtx.currentTime+0.3);o.connect(g).connect(masterGain);o.start();o.stop(audioCtx.currentTime+0.3)}
+        function playTiburonSound(){if(!audioCtx)return;const o=audioCtx.createOscillator(),g=audioCtx.createGain();g.gain.value=0.4;o.type='sawtooth';o.frequency.setValueAtTime(220,audioCtx.currentTime);o.frequency.exponentialRampToValueAtTime(110,audioCtx.currentTime+0.4);g.gain.exponentialRampToValueAtTime(1e-5,audioCtx.currentTime+0.5);o.connect(g).connect(masterGain);o.start();o.stop(audioCtx.currentTime+0.5)}
+        function playTsunamiSound(){if(!audioCtx)return;const bS=4*audioCtx.sampleRate,nB=audioCtx.createBuffer(1,bS,audioCtx.sampleRate),out=nB.getChannelData(0);let lO=0;for(let i=0;i<bS;i++){const w=Math.random()*2-1;out[i]=(lO+(0.02*w))/1.02;lO=out[i];out[i]*=3.5}const nS=audioCtx.createBufferSource();nS.buffer=nB;const f=audioCtx.createBiquadFilter();f.type="lowpass";f.frequency.setValueAtTime(100,audioCtx.currentTime);f.frequency.exponentialRampToValueAtTime(2000,audioCtx.currentTime+0.5);f.frequency.exponentialRampToValueAtTime(120,audioCtx.currentTime+2.2);f.Q.setValueAtTime(5,audioCtx.currentTime);f.Q.exponentialRampToValueAtTime(1,audioCtx.currentTime+2.2);const g=audioCtx.createGain();g.gain.setValueAtTime(0,audioCtx.currentTime);g.gain.linearRampToValueAtTime(0.8,audioCtx.currentTime+0.5);g.gain.exponentialRampToValueAtTime(1e-4,audioCtx.currentTime+2.2);nS.connect(f).connect(g).connect(masterGain);nS.start();nS.stop(audioCtx.currentTime+2.2)}
+        function createTsunamiBubbles(){const bC=tsunamiEffect;for(let i=0;i<70;i++){const b=document.createElement('div');b.className='tsunami-bubble';const s=Math.random()*40+10,d=Math.random()*1.5,dur=Math.random()*1+1.5;b.style.width=`${s}px`;b.style.height=`${s}px`;b.style.left=`${Math.random()*100}%`;b.style.animationDelay=`${d}s`;b.style.animationDuration=`${dur}s`;bC.appendChild(b)}}
+        function triggerTsunami(){initAudio();if(tsunamiEffect.classList.contains('active'))return;tsunamiEffect.innerHTML='<div class="tsunami-wave"></div>';tsunamiEffect.classList.add('active');playTsunamiSound();createTsunamiBubbles();setTimeout(()=>{tsunamiEffect.classList.remove('active')},2200)}
+        
+        playButton.addEventListener('click',()=>{mainMenu.classList.add('hidden');gameContainer.classList.remove('hidden');initAudio()});
+        backToMenuButton.addEventListener('click',()=>{gameContainer.classList.add('hidden');mainMenu.classList.remove('hidden');stopBackgroundMusic();if(audioCtx){audioCtx.close();audioCtx=null}});
+        muteButton.addEventListener('click',()=>{if(!audioCtx)initAudio();isMuted=!isMuted;if(masterGain)masterGain.gain.setTargetAtTime(isMuted?0:1,audioCtx.currentTime,0.01);soundOnIcon.classList.toggle('hidden',isMuted);soundOffIcon.classList.toggle('hidden',!isMuted)});
+        resetButton.addEventListener('click',()=>{initializeDecks();triggerTsunami()});
+        lanchasDeckEl.addEventListener('click',()=>drawCard('lanchas'));tiburonesDeckEl.addEventListener('click',()=>drawCard('tiburones'));
+        modalOverlay.addEventListener('click',e=>{if(e.target.id==='modal-overlay')hideCardModal()});
+        closeModalBtn.addEventListener('click', hideCardModal);
+        
+        initializeDecks();
+        initializeApp();
+    });
+    </script>
+</body>
+</html>
